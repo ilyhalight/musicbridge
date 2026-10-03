@@ -19,12 +19,14 @@ reconstruction of Omnibridge 1.0, recovered from the release APK. The original c
 On Android 13+, apps installed from an APK file (via browser, file manager, or messenger) are subject to "Restricted settings". When you try to grant Notification access, the system shows "For your security, this setting is currently unavailable" (RU UI: «В целях безопасности доступ к этой функции пока ограничен»). Installs via ADB, Android Studio, or app stores are not affected.
 
 **Fix steps:**
+
 1. Try to enable notification access for the app once (on Android 15+ the menu item in step 3 only appears after this attempt).
 2. Open **Settings → Apps → MusicBridge** (the `asNetease` build may be listed under the NetEase name).
 3. Tap the ⋮ menu in the top-right corner → **Allow restricted settings** → confirm with PIN/biometrics.
 4. Enable notification access again.
 
 **Alternative via ADB:**
+
 - Install via `adb install <apk>` (not restricted).
 - For `asNetease`:
   ```
@@ -44,13 +46,13 @@ On Android 13+, apps installed from an APK file (via browser, file manager, or m
 
 ## Flavors
 
-| Flavor | Application ID | Purpose |
-| --- | --- | --- |
+| Flavor      | Application ID           | Purpose                                        |
+| ----------- | ------------------------ | ---------------------------------------------- |
 | `asNetease` | `com.netease.cloudmusic` | NetEase Cloud Music. Passes the OEM whitelist. |
-| `asViper` | `com.kugou.viper` | KuGou Viper. |
-| `asQQ` | `com.tencent.qqmusic` | QQ Music. |
-| `asLuna` | `com.luna.music` | Luna Music. |
-| `asHiby` | `com.hiby.music` | Hiby Music. |
+| `asViper`   | `com.kugou.viper`        | KuGou Viper.                                   |
+| `asQQ`      | `com.tencent.qqmusic`    | QQ Music.                                      |
+| `asLuna`    | `com.luna.music`         | Luna Music.                                    |
+| `asHiby`    | `com.hiby.music`         | Hiby Music.                                    |
 
 The code namespace is `app.toil.musicbridge` for all flavors.
 
@@ -81,10 +83,3 @@ keyPassword=...
 
 The original 1.0 release key may be lost. An APK signed with a different key cannot update the installed one, so
 **uninstall the old version before installing a build signed with a new key.**
-
-## Project layout
-
-- `service/`: foreground service, listener service, `mirror/` (session mirroring, command forwarding, events).
-- `data/`: Preferences DataStore `settings` with the `onboarding_done` flag.
-- `ui/`: Compose UI. `navigation/` (splash routing), `onboarding/`, `panel/` (Apps and Settings tabs), `common/` (blur helpers), `MusicBridgeTheme.kt`.
-- `util/`: permission checks and system settings intents.
