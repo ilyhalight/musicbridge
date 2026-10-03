@@ -25,9 +25,57 @@ NEVER make push or pull requests without ASK an user!
 
 NEVER add commit hash to changelog message
 
-## Project layout
+## Technical summary
 
-- `service/`: foreground service, listener service, `mirror/` (session mirroring, command forwarding, events).
-- `data/`: Preferences DataStore `settings` with the `onboarding_done` flag.
-- `ui/`: Compose UI. `navigation/` (splash routing), `onboarding/`, `panel/` (Apps and Settings tabs), `common/` (blur helpers), `MusicBridgeTheme.kt`.
-- `util/`: permission checks and system settings intents.
+| Area         | Details                                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Platform     | Android 10+ (`minSdk` 29), `targetSdk` and `compileSdk` 36                                                              |
+| Language     | Kotlin 2.2.20, Java 11 bytecode target                                                                                  |
+| UI           | Jetpack Compose (BOM 2025.10.00), Material 3, MaterialKolor 4.0.5, Haze 1.7.1                                           |
+| Theme        | Always dark (AMOLED), generated from the fixed orange seed `#FF9230`; English and Russian                               |
+| State        | Kotlin coroutines 1.8.1 (`StateFlow` / `SharedFlow`), Preferences DataStore 1.1.7                                       |
+| Android APIs | `NotificationListenerService`, `MediaSessionManager`, `MediaController`, `MediaSession`                                 |
+| Build        | Gradle 8.13 wrapper, Android Gradle Plugin 8.13.0, version catalog, JDK 17                                              |
+| Release      | R8 minification and resource shrinking; optional `keystore.properties`, debug-key fallback                              |
+| Tests        | JUnit 4.13.2 (`ActiveSessionSelectionTest` covers the selection policy)                                                 |
+| Permissions  | `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
+
+### Project structure
+
+```text
+app/src/main/java/app/toil/musicbridge/
+├── MainActivity.kt                    entry point; starts the service when listener access is granted
+├── MusicBridgeApplication.kt          application class, holds SettingsRepository
+├── service/
+│   ├── MusicBridgeService.kt          foreground service and its notification (current player, Stop)
+│   ├── MusicBridgeListenerService.kt  empty listener whose grant unlocks media session access
+│   ├── MusicBridgeServiceState.kt     process-wide state: isRunning, activePackage, events
+│   └── mirror/
+│       ├── SessionMirror.kt           tracks foreign sessions, drives the mirror session
+│       ├── ActiveSessionSelection.kt  selectActive: which player to mirror
+│       ├── CommandForwarder.kt        forwards transport commands to the mirrored player
+│       ├── MirrorSessionData.kt       snapshot copied into the mirror session
+│       └── MirrorEvent.kt             active player, metadata and playback state events
+├── data/SettingsRepository.kt         Preferences DataStore ("onboarding_done")
+├── ui/
+│   ├── MusicBridgeTheme.kt            Material 3 theme from the orange seed
+│   ├── navigation/                    splash routing between onboarding and panel
+│   ├── onboarding/                    intro and permission screens
+│   ├── panel/                         Apps (work in progress) and Settings tabs
+│   └── common/                        blur and permission helpers
+└── util/SystemAccess.kt               permission checks and system settings intents
+```
+
+### Release signing
+
+Without configuration the release build is signed with the debug key, so it still builds and installs.
+To sign with your own key, create `keystore.properties` in the project root (it is gitignored):
+
+```properties
+storeFile=release.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+`storeFile` is resolved relative to the project root.
