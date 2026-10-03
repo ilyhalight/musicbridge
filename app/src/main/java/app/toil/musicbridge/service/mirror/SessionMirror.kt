@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import app.toil.musicbridge.scrobbling.ListeningState
+import app.toil.musicbridge.scrobbling.PlaybackSample
+import app.toil.musicbridge.scrobbling.ScrobbleTrack
 
 /**
  * Tracks the media sessions of other apps and mirrors the active one into [mirrorSession],
@@ -20,8 +23,10 @@ class SessionMirror(
     private val context: Context,
     private val listenerComponent: ComponentName,
     private val onEvent: (MirrorEvent) -> Unit,
+    private val playbackObserver: PlaybackObserver = PlaybackObserver {},
 ) {
     private inner class TrackedSession(val controller: MediaController) {
+        val sourceId = ++nextSourceId
         val token: MediaSession.Token = controller.sessionToken
         val packageName: String = controller.packageName
         val callback = SessionCallback(this)
@@ -43,6 +48,7 @@ class SessionMirror(
     private var activePackage: String? = null
     private var isStarted = false
     private var isStopped = false
+    private var nextSourceId = 0L
 
     /**
      * Instances are single-use: throws [IllegalStateException] when already started or stopped.
@@ -140,15 +146,45 @@ class SessionMirror(
         onEvent(MirrorEvent.ActivePlayerChanged(session.packageName))
         onEvent(MirrorEvent.MetadataChanged(session.packageName, session.data.metadata))
         onEvent(MirrorEvent.PlaybackStateChanged(session.packageName, session.data.playbackState))
+        playbackObserver.onPlayback(currentPlayback())
     }
 
     private fun deactivate() {
+        val wasActive = activeToken != null
         activeToken = null
         mirrorSession.isActive = false
         if (activePackage != null) {
             activePackage = null
             onEvent(MirrorEvent.ActivePlayerChanged(null))
         }
+        if (wasActive) playbackObserver.onPlayback(null)
+    }
+
+    fun currentPlayback(): PlaybackSample? {
+        val session = activeToken?.let(tracked::get) ?: return null
+        val metadata = session.data.metadata
+        val title = (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+            ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE))?.trim()
+        val artist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)?.trim()
+        val state = session.data.playbackState
+        val track = if (metadata != null && !title.isNullOrBlank() && !artist.isNullOrBlank()) ScrobbleTrack(
+            title = title,
+            artist = artist,
+            album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)?.trim(),
+            mediaId = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID),
+            durationMs = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION).takeIf { it > 0 },
+        ) else null
+        val listeningState = if (state == null) ListeningState.Stopped else when (state.state) {
+            PlaybackState.STATE_PLAYING -> if (state.playbackSpeed > 0) ListeningState.Playing else ListeningState.Paused
+            PlaybackState.STATE_PAUSED -> ListeningState.Paused
+            PlaybackState.STATE_NONE, PlaybackState.STATE_STOPPED, PlaybackState.STATE_ERROR -> ListeningState.Stopped
+            else -> ListeningState.Transition
+        }
+        return PlaybackSample(
+            session.sourceId, session.packageName, track, listeningState,
+            state?.position?.takeIf { it >= 0 },
+            state?.activeQueueItemId?.takeIf { it != MediaSession.QueueItem.UNKNOWN_ID.toLong() },
+        )
     }
 
     private fun isCurrent(session: TrackedSession) = tracked[session.token] === session
@@ -163,7 +199,10 @@ class SessionMirror(
         val isMirrored = session.token == activeToken
         Log.d(MirrorLog.SERVICE, "[cb:submit] ${session.packageName} field=$field mirrored=$isMirrored")
         // Replaying the whole snapshot here republishes stale fields during track transitions.
-        if (isMirrored) publish(mirrorSession)
+        if (isMirrored) {
+            publish(mirrorSession)
+            playbackObserver.onPlayback(currentPlayback())
+        }
     }
 
     private fun handlePlaybackState(session: TrackedSession, state: PlaybackState?) {

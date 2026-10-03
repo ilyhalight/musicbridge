@@ -40,7 +40,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
 private enum class PanelTab(@param:StringRes val title: Int, @param:DrawableRes val icon: Int) {
-    Apps(R.string.panel_apps, R.drawable.app_registration_24px),
+    Scrobbling(R.string.panel_scrobbling, R.drawable.app_registration_24px),
     Settings(R.string.panel_settings, R.drawable.settings_24px),
 }
 
@@ -88,7 +88,7 @@ fun MainPanel() {
             label = "panel-tab",
         ) { target ->
             when (target) {
-                PanelTab.Apps -> AppsTab()
+                PanelTab.Scrobbling -> ScrobblingTab(contentPadding = padding.withContentPadding(horizontal = 24.dp, vertical = 16.dp))
                 PanelTab.Settings -> SettingsTab(contentPadding = padding.withContentPadding(horizontal = 24.dp, vertical = 16.dp))
             }
         }

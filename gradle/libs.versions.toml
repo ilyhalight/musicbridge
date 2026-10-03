@@ -10,6 +10,8 @@ coroutines = "1.8.1"
 haze = "1.7.1"
 materialKolor = "4.0.5"
 junit = "4.13.2"
+work = "2.10.1"
+json = "20240303"
 
 [libraries]
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -26,6 +28,8 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 junit = { module = "junit:junit", version.ref = "junit" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+json = { module = "org.json:json", version.ref = "json" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

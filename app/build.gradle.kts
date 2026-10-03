@@ -102,8 +102,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.haze)
     implementation(libs.material.kolor)
 
     testImplementation(libs.junit)
+    testImplementation(libs.json)
 }

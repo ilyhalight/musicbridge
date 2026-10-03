@@ -4,8 +4,8 @@ import android.media.MediaMetadata
 import android.media.session.PlaybackState
 
 /**
- * Events describing the player that is currently mirrored. Consumers (e.g. a future scrobbler)
- * can collect [app.toil.musicbridge.service.MusicBridgeServiceState.events].
+ * UI events describing the player that is currently mirrored. Scrobbling uses [PlaybackObserver]
+ * for synchronous snapshots instead of the buffered UI flow.
  */
 sealed interface MirrorEvent {
     /** The mirrored player changed; [packageName] is null when no player is mirrored anymore. */

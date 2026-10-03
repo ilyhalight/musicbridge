@@ -42,6 +42,32 @@ every transport command (play, pause, skip, seek, …) is forwarded back to it.
 the current player (`Mirroring: <app>`) and a **Stop** action. `MusicBridgeServiceState` exposes `isRunning`,
 `activePackage` and a `MirrorEvent` flow (active player, metadata, playback state) to in-process consumers.
 
+## ListenBrainz and Maloja scrobbling
+
+Open the **Scrobbling** tab, get your user token from [ListenBrainz settings](https://listenbrainz.org/settings/),
+and connect your account. Connecting enables scrobbling; it is off by default.
+
+For **Maloja**, set **API server URL** to `https://your-server/apis/listenbrainz`
+(include any reverse-proxy path prefix) and enter a Maloja **API key** instead of a ListenBrainz user token.
+MusicBridge uses Maloja's ListenBrainz-compatible API, not `/apis/mlj_1`. The `/1` suffix is added automatically;
+URLs that already end in `/1` also work. Other ListenBrainz-compatible servers can be used the same way.
+
+HTTPS is the default. For an HTTP-only server, explicitly enable **Allow unencrypted HTTP** before connecting:
+the key and listening data will be sent without encryption. Redirects are not followed; enter the final API URL.
+The address is saved only after successful key validation, and editing the field alone does not change the connected server.
+
+- Only the currently mirrored player is tracked. Tracks need a title and artist; no `playing_now` updates are sent.
+- The default threshold is **30 seconds**. You can set a fixed threshold or use **half the track / 4 minutes,
+  whichever is shorter** (4 minutes if the duration is unknown). Pauses, buffering and seeks do not add listening time.
+- Qualified listens are queued with WorkManager and survive app restarts. Offline delivery, temporary server errors
+  and rate limits are retried. If a token is rejected, reconnect the same account to resume delivery.
+- Turning off scrobbling, disconnecting or switching servers/accounts discards the old queue. Reconnecting the same
+  server and account preserves it; old listens are never redirected to a new server.
+- Tokens are encrypted using Android Keystore and are not included in queued tasks. App data is excluded from backups.
+
+Only playback observed while the service is running counts. Partial listens are not restored after a service restart;
+already queued listens can still be sent while the mirroring service is stopped.
+
 ## Integrating with other apps
 
 To work with MusicBridge, your music player only needs an active `MediaSession`
@@ -74,7 +100,7 @@ package name, so a flavor cannot be installed next to the real app it uses the I
 1. Build the APK of your flavor ([Build from source](#build-from-source)) and install it.
 2. Open MusicBridge and follow the onboarding. Grant the permissions below.
 3. Play something. Opening the app starts the service whenever notification access is granted; the
-   **Settings** tab shows its state and starts it again after a Stop. There is no autostart on boot.
+   **Settings** tab shows its state and starts it again after a Stop. The mirroring service does not autostart on boot.
 
 | Permission                   | Needed   | Why                                               |
 | ---------------------------- | -------- | ------------------------------------------------- |

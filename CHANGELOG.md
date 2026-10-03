@@ -4,6 +4,11 @@
 
 ### Features
 
+- Optional ListenBrainz scrobbling for the mirrored player, with token validation and encrypted token storage
+- Custom ListenBrainz-compatible server URLs, including Maloja, with server-bound queues and explicit HTTP opt-in
+- Configurable listening threshold: 30 seconds by default, or half the track / 4 minutes, whichever is shorter
+- Persistent WorkManager delivery queue with offline, temporary-error and rate-limit retries; no `playing_now` submissions
+- Scrobbling settings replace the Apps tab, with English and Russian interface text
 - Notification shows the current player
 - Notification permission request on Android 13+
 - Russian translation for the notification and the permissions screen title

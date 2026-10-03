@@ -14,22 +14,32 @@ import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
+import app.toil.musicbridge.MusicBridgeApplication
 import app.toil.musicbridge.R
 import app.toil.musicbridge.service.mirror.MirrorLog
 import app.toil.musicbridge.service.mirror.SessionMirror
+import app.toil.musicbridge.service.mirror.PlaybackObserver
+import app.toil.musicbridge.scrobbling.ListenTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MusicBridgeService : Service() {
     private var mirror: SessionMirror? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private lateinit var tracker: ListenTracker
 
     override fun onCreate() {
         super.onCreate()
+        val app = application as MusicBridgeApplication
+        tracker = ListenTracker(SystemClock::elapsedRealtime, { System.currentTimeMillis() / 1000 }, app.scrobbleQueue::enqueue)
         MusicBridgeServiceState.setRunning(true)
         createNotificationChannel()
         startForeground(
@@ -46,9 +56,28 @@ class MusicBridgeService : Service() {
                 context = applicationContext,
                 listenerComponent = ComponentName(applicationContext, MusicBridgeListenerService::class.java),
                 onEvent = MusicBridgeServiceState::publish,
+                playbackObserver = PlaybackObserver(tracker::update),
             )
             this.mirror = mirror
             mirror.start()
+            scope.launch {
+                var wasTracking = false
+                var previousAccount: String? = null
+                app.settings.scrobbling.distinctUntilChangedBy {
+                    listOf(it.canTrack, it.accountId, it.thresholdMode, it.thresholdSeconds)
+                }.collect { settings ->
+                    tracker.configure(settings)
+                    if (settings.canTrack && (!wasTracking || settings.accountId != previousAccount)) tracker.update(mirror.currentPlayback())
+                    wasTracking = settings.canTrack
+                    previousAccount = settings.accountId
+                }
+            }
+            scope.launch {
+                while (isActive) {
+                    delay(1000)
+                    tracker.tick()
+                }
+            }
         } catch (e: SecurityException) {
             Log.e(MirrorLog.SERVICE, "Notification listener access is not granted", e)
             stopSelf()

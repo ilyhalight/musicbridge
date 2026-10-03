@@ -37,8 +37,9 @@ NEVER add commit hash to changelog message
 | Android APIs | `NotificationListenerService`, `MediaSessionManager`, `MediaController`, `MediaSession`                                 |
 | Build        | Gradle 8.13 wrapper, Android Gradle Plugin 8.13.0, version catalog, JDK 17                                              |
 | Release      | R8 minification and resource shrinking; optional `keystore.properties`, debug-key fallback                              |
-| Tests        | JUnit 4.13.2 (`ActiveSessionSelectionTest` covers the selection policy)                                                 |
-| Permissions  | `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
+| Tests        | JUnit 4.13.2 (session selection, listening tracker, ListenBrainz payloads and response policy)                          |
+| Scrobbling   | ListenBrainz-compatible servers (including Maloja), HTTPS by default / explicit HTTP opt-in, Keystore encryption, WorkManager 2.10.1 |
+| Permissions  | `INTERNET`, `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
 
 ### Project structure
 
@@ -55,13 +56,16 @@ app/src/main/java/app/toil/musicbridge/
 │       ├── ActiveSessionSelection.kt  selectActive: which player to mirror
 │       ├── CommandForwarder.kt        forwards transport commands to the mirrored player
 │       ├── MirrorSessionData.kt       snapshot copied into the mirror session
-│       └── MirrorEvent.kt             active player, metadata and playback state events
-├── data/SettingsRepository.kt         Preferences DataStore ("onboarding_done")
+│       ├── PlaybackObserver.kt        synchronous selected-player snapshots for scrobbling
+│       └── MirrorEvent.kt             active player, metadata and playback state UI events
+├── scrobbling/                        ListenTracker, ListenBrainzClient, ScrobblingEndpoint, ScrobbleQueue and ScrobbleWorker
+├── data/SettingsRepository.kt         onboarding and scrobbling preferences, encrypted credentials
+├── data/TokenCipher.kt                Android Keystore AES-GCM token encryption
 ├── ui/
 │   ├── MusicBridgeTheme.kt            Material 3 theme from the orange seed
 │   ├── navigation/                    splash routing between onboarding and panel
 │   ├── onboarding/                    intro and permission screens
-│   ├── panel/                         Apps (work in progress) and Settings tabs
+│   ├── panel/                         Scrobbling and Settings tabs
 │   └── common/                        blur and permission helpers
 └── util/SystemAccess.kt               permission checks and system settings intents
 ```
