@@ -35,7 +35,7 @@ internal fun scrobblingHttpRequest(url: String, token: String?, body: String?): 
         connection.instanceFollowRedirects = false
         connection.requestMethod = if (body == null) "GET" else "POST"
         if (token != null) connection.setRequestProperty("Authorization", "Token $token")
-        connection.setRequestProperty("User-Agent", "MusicBridge/1.0 (https://github.com/ilyhalight/)")
+        connection.setRequestProperty("User-Agent", "MusicBridge/1.0.1 (https://github.com/ilyhalight/)")
         if (body != null) {
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -92,7 +92,7 @@ class ListenBrainzClient(private val transport: ListenBrainzTransport = ListenBr
         fun payload(listen: ScrobbleListen): String {
             val additional = JSONObject()
                 .put("submission_client", "MusicBridge")
-                .put("submission_client_version", "1.0")
+                .put("submission_client_version", "1.0.1")
                 .put("media_player", listen.packageName)
                 .put("duration_played", listen.listenedMs / 1000)
             listen.track.durationMs?.takeIf { it in 1..2_073_600_000L }?.let {
