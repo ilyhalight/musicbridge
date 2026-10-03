@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="flow-title flow-desc">
+  <title id="flow-title">How MusicBridge works</title>
+  <desc id="flow-desc">Four steps: the notification listener grant exposes other apps' media sessions; SessionMirror tracks every player; selectActive picks one, where a playing player wins, a paused one stays and the next is chosen when it is destroyed; the chosen session is mirrored and CommandForwarder sends transport commands back to the player.</desc>
+
+  <rect width="1200" height="380" rx="28" fill="#0A0A0B"/>
+  <rect x="1" y="1" width="1198" height="378" rx="27" fill="none" stroke="#2B2620" stroke-width="2"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif">
+    <g transform="translate(56 40)">
+      <rect width="254" height="300" rx="24" fill="#141210" stroke="#2B2620" stroke-width="2"/>
+      <circle cx="46" cy="46" r="22" fill="#FF9230"/>
+      <text x="46" y="55" text-anchor="middle" font-size="24" font-weight="800" fill="#0A0A0B">1</text>
+      <text x="22" y="112" font-size="28" font-weight="700" fill="#F4EDE6">Grant access</text>
+      <g font-size="20" fill="#A89D91">
+        <text x="22" y="148">Listener grant lets</text>
+        <text x="22" y="176">the app read other</text>
+        <text x="22" y="204">apps' sessions</text>
+      </g>
+      <path d="M22 232 H232" stroke="#2B2620" stroke-width="2"/>
+      <text x="22" y="270" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#FF9230">ListenerService</text>
+    </g>
+
+    <g transform="translate(334 40)">
+      <rect width="254" height="300" rx="24" fill="#141210" stroke="#2B2620" stroke-width="2"/>
+      <circle cx="46" cy="46" r="22" fill="#FF9230"/>
+      <text x="46" y="55" text-anchor="middle" font-size="24" font-weight="800" fill="#0A0A0B">2</text>
+      <text x="22" y="112" font-size="28" font-weight="700" fill="#F4EDE6">Track players</text>
+      <g font-size="20" fill="#A89D91">
+        <text x="22" y="148">One callback per</text>
+        <text x="22" y="176">session token, in</text>
+        <text x="22" y="204">system order</text>
+      </g>
+      <path d="M22 232 H232" stroke="#2B2620" stroke-width="2"/>
+      <text x="22" y="270" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#FF9230">SessionMirror</text>
+    </g>
+
+    <g transform="translate(612 40)">
+      <rect width="254" height="300" rx="24" fill="#141210" stroke="#2B2620" stroke-width="2"/>
+      <circle cx="46" cy="46" r="22" fill="#FF9230"/>
+      <text x="46" y="55" text-anchor="middle" font-size="24" font-weight="800" fill="#0A0A0B">3</text>
+      <text x="22" y="112" font-size="28" font-weight="700" fill="#F4EDE6">Pick one</text>
+      <g font-size="20" fill="#A89D91">
+        <text x="22" y="148">Playing one wins,</text>
+        <text x="22" y="176">paused one stays,</text>
+        <text x="22" y="204">next on destroy</text>
+      </g>
+      <path d="M22 232 H232" stroke="#2B2620" stroke-width="2"/>
+      <text x="22" y="270" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#FF9230">selectActive()</text>
+    </g>
+
+    <g transform="translate(890 40)">
+      <rect width="254" height="300" rx="24" fill="#1F1710" stroke="#FF9230" stroke-width="2"/>
+      <circle cx="46" cy="46" r="22" fill="#FF9230"/>
+      <text x="46" y="55" text-anchor="middle" font-size="24" font-weight="800" fill="#0A0A0B">4</text>
+      <text x="22" y="112" font-size="28" font-weight="700" fill="#F4EDE6">Mirror it</text>
+      <g font-size="20" fill="#D9CFC4">
+        <text x="22" y="148">State &amp; metadata</text>
+        <text x="22" y="176">are copied; play,</text>
+        <text x="22" y="204">skip, seek go back</text>
+      </g>
+      <path d="M22 232 H232" stroke="#4A3A28" stroke-width="2"/>
+      <text x="22" y="270" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#FF9230">CommandForwarder</text>
+    </g>
+
+    <g fill="none" stroke="#FF9230" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M317 182 L327 190 L317 198"/>
+      <path d="M595 182 L605 190 L595 198"/>
+      <path d="M873 182 L883 190 L873 198"/>
+    </g>
+  </g>
+</svg>
