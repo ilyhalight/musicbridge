@@ -29,9 +29,21 @@ android {
             dimension = "identity"
             applicationId = "com.netease.cloudmusic"
         }
-        create("standalone") {
+        create("asViper") {
             dimension = "identity"
-            applicationId = "app.toil.musicbridge"
+            applicationId = "com.kugou.viper"
+        }
+        create("asQQ") {
+            dimension = "identity"
+            applicationId = "com.tencent.qqmusic"
+        }
+        create("asLuna") {
+            dimension = "identity"
+            applicationId = "com.luna.music"
+        }
+        create("asHiby") {
+            dimension = "identity"
+            applicationId = "com.hiby.music"
         }
     }
 

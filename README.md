@@ -30,10 +30,8 @@ On Android 13+, apps installed from an APK file (via browser, file manager, or m
   ```
   adb shell cmd notification allow_listener com.netease.cloudmusic/app.toil.musicbridge.service.MusicBridgeListenerService
   ```
-- For standalone:
-  ```
-  adb shell cmd notification allow_listener app.toil.musicbridge/app.toil.musicbridge.service.MusicBridgeListenerService
-  ```
+- Other flavors follow the same pattern, `<applicationId>/app.toil.musicbridge.service.MusicBridgeListenerService`,
+  with the application ID from the [Flavors](#flavors) table.
 
 ## How it works
 
@@ -48,10 +46,13 @@ On Android 13+, apps installed from an APK file (via browser, file manager, or m
 
 | Flavor | Application ID | Purpose |
 | --- | --- | --- |
-| `asNetease` | `com.netease.cloudmusic` | The release identity. Passes the OEM whitelist. |
-| `standalone` | `app.toil.musicbridge` | For debugging. Will not pass the OEM whitelist. |
+| `asNetease` | `com.netease.cloudmusic` | NetEase Cloud Music. Passes the OEM whitelist. |
+| `asViper` | `com.kugou.viper` | KuGou Viper. |
+| `asQQ` | `com.tencent.qqmusic` | QQ Music. |
+| `asLuna` | `com.luna.music` | Luna Music. |
+| `asHiby` | `com.hiby.music` | Hiby Music. |
 
-The code namespace is `app.toil.musicbridge` for both.
+The code namespace is `app.toil.musicbridge` for all flavors.
 
 ## Build
 
@@ -59,7 +60,7 @@ Requirements: JDK 17 and the Android SDK (platform 36). Put the SDK path in `loc
 
 ```
 gradlew.bat assembleAsNeteaseRelease
-gradlew.bat assembleStandaloneDebug
+gradlew.bat assembleRelease
 gradlew.bat lintAsNeteaseRelease
 ```
 
