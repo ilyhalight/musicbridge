@@ -18,6 +18,10 @@ MusicBridge mirrors the active media session of any music player (Spotify, VK X,
 Settings media widget and the Dynamic Island then show the player you are actually using, and
 every transport command (play, pause, skip, seek, …) is forwarded back to it.
 
+<p align="center">
+  <img src="./assets/readme/preview.webp" width="420" alt="System media controls on a OnePlus phone showing a track from a third-party player through MusicBridge: album art, title, artist, progress bar and playback controls.">
+</p>
+
 > [!WARNING]
 > **Compatibility.** vivo has additional built-in checks that currently limit MusicBridge, so it may not work
 > there. Other BBK phones (Oppo, OnePlus, realme) should work fine. It makes no sense on a Pixel or any other
