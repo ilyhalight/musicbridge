@@ -8,7 +8,8 @@
   <a href="#how-it-works"><b>How it works</b></a> ·
   <a href="#integrating-with-other-apps"><b>Integrating</b></a> ·
   <a href="#flavors"><b>Flavors</b></a> ·
-  <a href="#build-from-source"><b>Build</b></a>
+  <a href="#build-from-source"><b>Build</b></a> ·
+  <a href="#fork-of-omnibridge"><b>Fork</b></a>
 </div>
 
 <br>
@@ -17,6 +18,9 @@ MusicBridge mirrors the active media session of any music player (Spotify, VK X,
 `MediaSession`, published under a package name that OEM ROMs whitelist. The lock screen, the Quick
 Settings media widget and the Dynamic Island then show the player you are actually using, and
 every transport command (play, pause, skip, seek, …) is forwarded back to it.
+
+MusicBridge is a fork of [Omnibridge](https://github.com/iTaysonLab/Omnibridge) by [iTaysonLab](https://github.com/iTaysonLab), a [bruhcollective](https://t.me/bruhcollective) project.
+See [Fork of Omnibridge](#fork-of-omnibridge) for what changed.
 
 <p align="center">
   <img src="./assets/readme/preview.webp" width="420" alt="System media controls on a OnePlus phone showing a track from a third-party player through MusicBridge: album art, title, artist, progress bar and playback controls.">
@@ -156,3 +160,16 @@ gradlew.bat testAsNeteaseDebugUnitTest
 
 The first builds one flavor, the second builds all five. APKs land in
 `app/build/outputs/apk/<flavor>/release/`, for example `asNetease/release/app-asNetease-release.apk`.
+
+## Fork of Omnibridge
+
+MusicBridge keeps core idea and attribution of Omnibridge 1.0.
+The original app, its idea and the mirroring approach belong to [iTaysonLab](https://github.com/iTaysonLab) and [bruhcollective](https://t.me/bruhcollective).
+
+Changes compared to Omnibridge:
+
+- optional ListenBrainz and Maloja scrobbling, with custom servers and an offline delivery queue;
+- more reliable player detection and switching, with sessions tracked by `MediaSession.Token`;
+- the **Stop** action in the notification works, and the notification shows the current player;
+- notification permission request on Android 13+;
+- a new package namespace, `app.toil.musicbridge`, and a new name.
