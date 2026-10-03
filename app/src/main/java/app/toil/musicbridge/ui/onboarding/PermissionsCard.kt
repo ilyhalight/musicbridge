@@ -1,5 +1,6 @@
 package app.toil.musicbridge.ui.onboarding
 
+import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -29,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.toil.musicbridge.R
+import app.toil.musicbridge.ui.common.rememberNotificationPermissionRequest
 import app.toil.musicbridge.util.openNotificationListenerSettings
 import app.toil.musicbridge.util.requestIgnoreBatteryOptimizations
 
@@ -40,6 +42,7 @@ fun PermissionsCard(
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
+    val requestNotifications = rememberNotificationPermissionRequest()
 
     Card(modifier, colors = CardDefaults.cardColors(containerColor = colors.primary)) {
         Column(
@@ -57,6 +60,17 @@ fun PermissionsCard(
                     granted = permissions.notificationListener,
                     onClick = context::openNotificationListenerSettings,
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    HorizontalDivider()
+                    PermissionRow(
+                        title = R.string.onboarding_act_full_a2,
+                        description = R.string.onboarding_act_full_a2_d,
+                        icon = R.drawable.notification_settings_24px,
+                        granted = permissions.notifications,
+                        overline = R.string.onboarding_act_full_a3_e,
+                        onClick = requestNotifications,
+                    )
+                }
                 HorizontalDivider()
                 PermissionRow(
                     title = R.string.onboarding_act_full_a3,

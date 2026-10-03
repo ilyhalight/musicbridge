@@ -1,8 +1,10 @@
 package app.toil.musicbridge.util
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.PowerManager
 import android.provider.Settings
@@ -14,6 +16,30 @@ fun Context.isNotificationListenerEnabled(): Boolean =
 
 fun Context.isIgnoringBatteryOptimizations(): Boolean =
     getSystemService(PowerManager::class.java)?.isIgnoringBatteryOptimizations(packageName) == true
+
+fun Context.areNotificationsEnabled(): Boolean =
+    NotificationManagerCompat.from(this).areNotificationsEnabled()
+
+fun Context.findActivity(): Activity? {
+    var current = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
+}
+
+fun Context.openAppNotificationSettings() {
+    try {
+        startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (e: ActivityNotFoundException) {
+        e.printStackTrace()
+    }
+}
 
 fun Context.openNotificationListenerSettings() {
     try {

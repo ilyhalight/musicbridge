@@ -9,17 +9,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import app.toil.musicbridge.util.areNotificationsEnabled
 import app.toil.musicbridge.util.isIgnoringBatteryOptimizations
 import app.toil.musicbridge.util.isNotificationListenerEnabled
 
 data class PermissionState(
     val notificationListener: Boolean,
     val unrestrictedBackground: Boolean,
+    val notifications: Boolean,
 )
 
 private fun Context.readPermissionState() = PermissionState(
     notificationListener = isNotificationListenerEnabled(),
     unrestrictedBackground = isIgnoringBatteryOptimizations(),
+    notifications = areNotificationsEnabled(),
 )
 
 /** Re-reads the permissions every time the user comes back from system settings. */
