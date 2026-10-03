@@ -92,4 +92,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.haze)
     implementation(libs.material.kolor)
+
+    testImplementation(libs.junit)
 }

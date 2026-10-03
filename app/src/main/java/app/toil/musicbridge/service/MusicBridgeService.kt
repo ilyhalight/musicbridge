@@ -41,11 +41,14 @@ class MusicBridgeService : Service() {
         scope.launch { MusicBridgeServiceState.activePackage.collect(::updateNotification) }
 
         try {
-            mirror = SessionMirror(
+            // Assigned before start() so that onDestroy can release it even when start() fails.
+            val mirror = SessionMirror(
                 context = applicationContext,
                 listenerComponent = ComponentName(applicationContext, MusicBridgeListenerService::class.java),
                 onEvent = MusicBridgeServiceState::publish,
-            ).also(SessionMirror::start)
+            )
+            this.mirror = mirror
+            mirror.start()
         } catch (e: SecurityException) {
             Log.e(MirrorLog.SERVICE, "Notification listener access is not granted", e)
             stopSelf()

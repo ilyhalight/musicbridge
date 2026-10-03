@@ -9,6 +9,7 @@ datastore = "1.1.7"
 coroutines = "1.8.1"
 haze = "1.7.1"
 materialKolor = "4.0.5"
+junit = "4.13.2"
 
 [libraries]
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -24,6 +25,7 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

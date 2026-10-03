@@ -8,6 +8,8 @@ import android.media.session.MediaSession
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 
 /**
@@ -19,159 +21,199 @@ class SessionMirror(
     private val listenerComponent: ComponentName,
     private val onEvent: (MirrorEvent) -> Unit,
 ) {
-    private class TrackedSession(
-        val controller: MediaController,
-        val callback: MediaController.Callback,
-        var data: MirrorSessionData,
-        var isPlaying: Boolean,
-    )
+    private inner class TrackedSession(val controller: MediaController) {
+        val token: MediaSession.Token = controller.sessionToken
+        val packageName: String = controller.packageName
+        val callback = SessionCallback(this)
+        var data = MirrorSessionData()
+        var isPlaying = false
+    }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val sessionManager = checkNotNull(context.getSystemService(MediaSessionManager::class.java)) {
         "MediaSessionManager is not available"
     }
     private val mirrorSession = MediaSession(context, MIRROR_SESSION_TAG).apply { isActive = false }
-    private val tracked = LinkedHashMap<String, TrackedSession>()
+    private val tracked = LinkedHashMap<MediaSession.Token, TrackedSession>()
     private val activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener(::onActiveSessionsChanged)
 
+    /** Tokens of the last received session list, in system priority order (most recent first). */
+    private var priorityOrder = emptyList<MediaSession.Token>()
+    private var activeToken: MediaSession.Token? = null
     private var activePackage: String? = null
+    private var isStarted = false
+    private var isStopped = false
 
-    /** Throws [SecurityException] when the notification listener access is not granted. */
+    /**
+     * Instances are single-use: throws [IllegalStateException] when already started or stopped.
+     * Throws [SecurityException] when the notification listener access is not granted.
+     * On any failure everything acquired so far is released before the exception is rethrown.
+     */
     fun start() {
-        mirrorSession.setCallback(CommandForwarder { activePackage?.let { tracked[it]?.controller } })
-        sessionManager.addOnActiveSessionsChangedListener(activeSessionsListener, listenerComponent)
-        onActiveSessionsChanged(sessionManager.getActiveSessions(listenerComponent))
+        check(!isStarted && !isStopped) { "SessionMirror is single-use" }
+        isStarted = true
+        try {
+            mirrorSession.setCallback(CommandForwarder { activeToken?.let { tracked[it]?.controller } })
+            sessionManager.addOnActiveSessionsChangedListener(activeSessionsListener, listenerComponent, mainHandler)
+            onActiveSessionsChanged(sessionManager.getActiveSessions(listenerComponent))
+        } catch (e: Throwable) {
+            runCatching(::stop).onFailure(e::addSuppressed)
+            throw e
+        }
     }
 
     fun stop() {
-        sessionManager.removeOnActiveSessionsChangedListener(activeSessionsListener)
-        tracked.values.forEach { it.controller.unregisterCallback(it.callback) }
-        tracked.clear()
-        setActivePackage(null)
-        mirrorSession.release()
+        if (isStopped) return
+        isStopped = true
+
+        try {
+            runCatching { sessionManager.removeOnActiveSessionsChangedListener(activeSessionsListener) }
+                .onFailure { Log.w(MirrorLog.SERVICE, "[stop] failed to remove listener", it) }
+            tracked.values.forEach { session ->
+                runCatching { session.controller.unregisterCallback(session.callback) }
+                    .onFailure { Log.w(MirrorLog.SERVICE, "[stop] failed to unregister ${session.packageName}", it) }
+            }
+        } finally {
+            tracked.clear()
+            priorityOrder = emptyList()
+            try {
+                deactivate()
+            } finally {
+                mirrorSession.release()
+            }
+        }
     }
 
     private fun onActiveSessionsChanged(controllers: List<MediaController>?) {
+        if (isStopped) return
         Log.d(MirrorLog.SERVICE, "[onActiveSessionsChanged]")
         val foreign = controllers.orEmpty().filter { it.packageName != context.packageName }
+        val tokens = foreign.map { it.sessionToken }.distinct()
+        priorityOrder = tokens
 
-        if (foreign.isEmpty()) {
-            Log.d(MirrorLog.SERVICE, "[onActiveSessionsChanged] > clear")
-            setActivePackage(null)
-            mirrorSession.isActive = false
-            return
+        val removed = tracked.keys - tokens.toSet()
+        removed.forEach { token ->
+            Log.d(MirrorLog.SERVICE, "[onActiveSessionsChanged] > remove ${tracked[token]?.packageName}")
+            untrack(token)
         }
+        foreign.filter { it.sessionToken !in tracked }.forEach(::track)
 
-        Log.d(MirrorLog.SERVICE, "[onActiveSessionsChanged] > reg")
-        foreign.forEach(::registerController)
+        reselect()
     }
 
-    private fun registerController(controller: MediaController) {
-        Log.d(MirrorLog.SERVICE, "[registerController] $controller")
-        val packageName = controller.packageName
-        if (packageName in tracked) return
-
-        Log.d(MirrorLog.SERVICE, "[registerController] new > $controller")
-        val callback = SessionCallback(packageName)
-        val session = TrackedSession(
-            controller = controller,
-            callback = callback,
-            data = MirrorSessionData.of(controller),
-            isPlaying = controller.playbackState.isPlaying,
-        )
-        tracked[packageName] = session
-        controller.registerCallback(callback)
-
-        if (session.isPlaying) activate(packageName)
+    private fun track(controller: MediaController) {
+        Log.d(MirrorLog.SERVICE, "[track] ${controller.packageName}")
+        val session = TrackedSession(controller)
+        tracked[session.token] = session
+        // Register before reading the state, otherwise a change in between would be lost.
+        controller.registerCallback(session.callback, mainHandler)
+        session.data = MirrorSessionData.of(controller)
+        session.isPlaying = controller.playbackState.isPlaying
     }
 
-    private fun activate(packageName: String) {
-        Log.d(MirrorLog.SERVICE, "[setActiveSession] $packageName")
-        val session = tracked[packageName] ?: return
+    private fun untrack(token: MediaSession.Token) {
+        tracked.remove(token)?.let { it.controller.unregisterCallback(it.callback) }
+    }
 
-        val changed = activePackage != packageName
-        activePackage = packageName
+    /** Applies [selectActive] to the current state; [justStarted] is the session that has just begun playing. */
+    private fun reselect(justStarted: MediaSession.Token? = null) {
+        val candidates = priorityOrder.mapNotNull(tracked::get).map { SessionCandidate(it.token, it.isPlaying) }
+        val target = selectActive(candidates, activeToken, justStarted)
+        Log.d(MirrorLog.SERVICE, "[reselect] ${target?.let(tracked::get)?.packageName}")
+
+        when {
+            target == null -> deactivate()
+            target != activeToken -> activate(tracked.getValue(target))
+        }
+    }
+
+    private fun activate(session: TrackedSession) {
+        Log.d(MirrorLog.SERVICE, "[activate] ${session.packageName}")
+        activeToken = session.token
+        activePackage = session.packageName
+
         mirrorSession.setSessionActivity(session.controller.sessionActivity)
-        mirrorSession.isActive = true
-
         session.data = MirrorSessionData.of(session.controller)
         session.data.applyTo(mirrorSession)
+        mirrorSession.isActive = true
 
-        if (changed) {
-            onEvent(MirrorEvent.ActivePlayerChanged(packageName))
-            onEvent(MirrorEvent.MetadataChanged(packageName, session.data.metadata))
-            onEvent(MirrorEvent.PlaybackStateChanged(packageName, session.data.playbackState))
+        onEvent(MirrorEvent.ActivePlayerChanged(session.packageName))
+        onEvent(MirrorEvent.MetadataChanged(session.packageName, session.data.metadata))
+        onEvent(MirrorEvent.PlaybackStateChanged(session.packageName, session.data.playbackState))
+    }
+
+    private fun deactivate() {
+        activeToken = null
+        mirrorSession.isActive = false
+        if (activePackage != null) {
+            activePackage = null
+            onEvent(MirrorEvent.ActivePlayerChanged(null))
         }
     }
 
-    private fun setActivePackage(packageName: String?) {
-        if (activePackage == packageName) return
-        activePackage = packageName
-        onEvent(MirrorEvent.ActivePlayerChanged(packageName))
-    }
+    private fun isCurrent(session: TrackedSession) = tracked[session.token] === session
 
-    private fun update(packageName: String, transform: (MirrorSessionData) -> MirrorSessionData) {
-        val session = tracked[packageName] ?: return
+    private fun update(session: TrackedSession, transform: (MirrorSessionData) -> MirrorSessionData) {
         session.data = transform(session.data)
-        Log.d(MirrorLog.SERVICE, "[cb:submit] $packageName ${session.data}")
-        if (packageName == activePackage) session.data.applyTo(mirrorSession)
+        Log.d(MirrorLog.SERVICE, "[cb:submit] ${session.packageName} ${session.data}")
+        if (session.token == activeToken) session.data.applyTo(mirrorSession)
     }
 
-    private fun onPlayingChanged(packageName: String, playing: Boolean) {
-        val session = tracked[packageName] ?: return
-        Log.d(MirrorLog.SERVICE, "[onSessionPlayingChange] $packageName $playing")
-        session.isPlaying = playing
+    private fun handlePlaybackState(session: TrackedSession, state: PlaybackState?) {
+        update(session) { it.copy(playbackState = state) }
+        if (session.token == activeToken) onEvent(MirrorEvent.PlaybackStateChanged(session.packageName, state))
 
-        val current = activePackage
-        if (current == null || (tracked[current]?.isPlaying != true && current != packageName)) {
-            activate(packageName)
-        }
+        Log.d(MirrorLog.SERVICE, "[onSessionPlayingChange] ${session.packageName} ${state.isPlaying}")
+        session.isPlaying = state.isPlaying
+        reselect(justStarted = session.token.takeIf { session.isPlaying })
     }
 
-    private fun handleSessionDestroyed(packageName: String) {
-        Log.d(MirrorLog.SERVICE, "[onSessionDestroyed] $packageName")
-        if (packageName == activePackage) {
-            mirrorSession.isActive = false
-            setActivePackage(null)
-        }
-        tracked.remove(packageName)?.let { it.controller.unregisterCallback(it.callback) }
+    private fun handleSessionDestroyed(session: TrackedSession) {
+        Log.d(MirrorLog.SERVICE, "[onSessionDestroyed] ${session.packageName}")
+        untrack(session.token)
+        reselect()
     }
 
-    private inner class SessionCallback(private val packageName: String) : MediaController.Callback() {
+    private inner class SessionCallback(private val session: TrackedSession) : MediaController.Callback() {
         override fun onAudioInfoChanged(info: MediaController.PlaybackInfo) {
             Log.d(MirrorLog.MIRRORED, "onAudioInfoChanged $info")
         }
 
         override fun onExtrasChanged(extras: Bundle?) {
             Log.d(MirrorLog.MIRRORED, "onExtrasChanged $extras")
-            update(packageName) { it.copy(extras = extras) }
+            if (!isCurrent(session)) return
+            update(session) { it.copy(extras = extras) }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadata?) {
             Log.d(MirrorLog.MIRRORED, "onMetadataChanged $metadata")
-            update(packageName) { it.copy(metadata = metadata) }
-            if (packageName == activePackage) onEvent(MirrorEvent.MetadataChanged(packageName, metadata))
+            if (!isCurrent(session)) return
+            update(session) { it.copy(metadata = metadata) }
+            if (session.token == activeToken) onEvent(MirrorEvent.MetadataChanged(session.packageName, metadata))
         }
 
         override fun onPlaybackStateChanged(state: PlaybackState?) {
             Log.d(MirrorLog.MIRRORED, "onPlaybackStateChanged $state")
-            update(packageName) { it.copy(playbackState = state) }
-            if (packageName == activePackage) onEvent(MirrorEvent.PlaybackStateChanged(packageName, state))
-            onPlayingChanged(packageName, state.isPlaying)
+            if (!isCurrent(session)) return
+            handlePlaybackState(session, state)
         }
 
         override fun onQueueChanged(queue: List<MediaSession.QueueItem>?) {
             Log.d(MirrorLog.MIRRORED, "onQueueChanged ${queue?.joinToString()}")
-            update(packageName) { it.copy(queue = queue) }
+            if (!isCurrent(session)) return
+            update(session) { it.copy(queue = queue) }
         }
 
         override fun onQueueTitleChanged(title: CharSequence?) {
             Log.d(MirrorLog.MIRRORED, "onQueueTitleChanged $title")
-            update(packageName) { it.copy(queueTitle = title) }
+            if (!isCurrent(session)) return
+            update(session) { it.copy(queueTitle = title) }
         }
 
         override fun onSessionDestroyed() {
             Log.d(MirrorLog.MIRRORED, "onSessionDestroyed")
-            handleSessionDestroyed(packageName)
+            if (!isCurrent(session)) return
+            handleSessionDestroyed(session)
         }
 
         override fun onSessionEvent(event: String, extras: Bundle?) {
