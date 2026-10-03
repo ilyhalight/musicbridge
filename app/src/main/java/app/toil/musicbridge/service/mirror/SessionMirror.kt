@@ -153,14 +153,23 @@ class SessionMirror(
 
     private fun isCurrent(session: TrackedSession) = tracked[session.token] === session
 
-    private fun update(session: TrackedSession, transform: (MirrorSessionData) -> MirrorSessionData) {
-        session.data = transform(session.data)
-        Log.d(MirrorLog.SERVICE, "[cb:submit] ${session.packageName} ${session.data}")
-        if (session.token == activeToken) session.data.applyTo(mirrorSession)
+    private fun update(
+        session: TrackedSession,
+        data: MirrorSessionData,
+        field: String,
+        publish: (MediaSession) -> Unit,
+    ) {
+        session.data = data
+        val isMirrored = session.token == activeToken
+        Log.d(MirrorLog.SERVICE, "[cb:submit] ${session.packageName} field=$field mirrored=$isMirrored")
+        // Replaying the whole snapshot here republishes stale fields during track transitions.
+        if (isMirrored) publish(mirrorSession)
     }
 
     private fun handlePlaybackState(session: TrackedSession, state: PlaybackState?) {
-        update(session) { it.copy(playbackState = state) }
+        update(session, session.data.copy(playbackState = state), "playbackState") {
+            it.setPlaybackState(state)
+        }
         if (session.token == activeToken) onEvent(MirrorEvent.PlaybackStateChanged(session.packageName, state))
 
         Log.d(MirrorLog.SERVICE, "[onSessionPlayingChange] ${session.packageName} ${state.isPlaying}")
@@ -182,32 +191,32 @@ class SessionMirror(
         override fun onExtrasChanged(extras: Bundle?) {
             Log.d(MirrorLog.MIRRORED, "onExtrasChanged $extras")
             if (!isCurrent(session)) return
-            update(session) { it.copy(extras = extras) }
+            update(session, session.data.copy(extras = extras), "extras") { it.setExtras(extras) }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadata?) {
-            Log.d(MirrorLog.MIRRORED, "onMetadataChanged $metadata")
+            Log.d(MirrorLog.MIRRORED, "onMetadataChanged title=${metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)}")
             if (!isCurrent(session)) return
-            update(session) { it.copy(metadata = metadata) }
+            update(session, session.data.copy(metadata = metadata), "metadata") { it.setMetadata(metadata) }
             if (session.token == activeToken) onEvent(MirrorEvent.MetadataChanged(session.packageName, metadata))
         }
 
         override fun onPlaybackStateChanged(state: PlaybackState?) {
-            Log.d(MirrorLog.MIRRORED, "onPlaybackStateChanged $state")
+            Log.d(MirrorLog.MIRRORED, "onPlaybackStateChanged state=${state?.state} position=${state?.position} updated=${state?.lastPositionUpdateTime}")
             if (!isCurrent(session)) return
             handlePlaybackState(session, state)
         }
 
         override fun onQueueChanged(queue: List<MediaSession.QueueItem>?) {
-            Log.d(MirrorLog.MIRRORED, "onQueueChanged ${queue?.joinToString()}")
+            Log.d(MirrorLog.MIRRORED, "onQueueChanged size=${queue?.size}")
             if (!isCurrent(session)) return
-            update(session) { it.copy(queue = queue) }
+            update(session, session.data.copy(queue = queue), "queue") { it.setQueue(queue) }
         }
 
         override fun onQueueTitleChanged(title: CharSequence?) {
             Log.d(MirrorLog.MIRRORED, "onQueueTitleChanged $title")
             if (!isCurrent(session)) return
-            update(session) { it.copy(queueTitle = title) }
+            update(session, session.data.copy(queueTitle = title), "queueTitle") { it.setQueueTitle(title) }
         }
 
         override fun onSessionDestroyed() {

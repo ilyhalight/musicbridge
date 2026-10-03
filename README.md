@@ -82,6 +82,12 @@ package name, so a flavor cannot be installed next to the real app it uses the I
 | Notifications (Android 13+)  | Optional | Shows the service status and the **Stop** button  |
 | Unrestricted battery use     | Optional | Keeps the service alive for longer                |
 
+### ColorOS background activity
+
+On ColorOS, enable **Allow background activity** for MusicBridge in
+**Settings → Apps → MusicBridge → Battery usage**. Battery optimization exemption alone may not prevent
+the system from freezing the app and hiding the Dynamic Island.
+
 ### "Restricted settings" on Android 13+
 
 An APK installed from a browser, file manager or messenger is subject to _Restricted settings_: granting
