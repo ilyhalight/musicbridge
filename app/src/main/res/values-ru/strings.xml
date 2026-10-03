@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_current_version">Версия %1$s</string>
+    <string name="about_current_author">Автор: Toil</string>
+    <string name="about_original_subtitle">Оригинальное приложение</string>
+    <string name="about_original_author">Автор: iTaysonLab</string>
+    <string name="about_original_studio">проект bruhcollective</string>
+    <string name="control_service_started">Сервис запущен!</string>
+    <string name="control_service_stopped">Сервис остановлен!</string>
+    <string name="control_service_stopped_desc">Нажмите для запуска</string>
+    <string name="onboarding">Добро пожаловать в MusicBridge!</string>
+    <string name="onboarding_act">Начать</string>
+    <string name="onboarding_act_disclaimer">MusicBridge предназначен для совместимых устройств на стоковых прошивках - таких как Oppo, vivo или OnePlus.\n\nЭто приложение не имеет смысла на чистом Android или Pixel.</string>
+    <string name="onboarding_act_full">Grant permissions</string>
+    <string name="onboarding_act_full_a1">Отслеживание уведомлений</string>
+    <string name="onboarding_act_full_a1_d">Требуется Android для предоставления данных о текущих сессиях</string>
+    <string name="onboarding_act_full_a3">Неограниченная работа в фоне</string>
+    <string name="onboarding_act_full_a3_d">Чтобы MusicBridge работал дольше</string>
+    <string name="onboarding_act_full_a3_e">Опционально</string>
+    <string name="onboarding_act_full_act">Продолжить</string>
+    <string name="onboarding_act_full_hint">MusicBridge не имеет разрешения \"Интернет\", поэтому ваши данные в полной сохранности.</string>
+    <string name="onboarding_c1">Стакливались с тем, что система не хочет управлять вашим музыкальным плеером?</string>
+    <string name="onboarding_c2">Он не показывается в вашем \"Динамическом острове\"? Не показывается в красивом виджете в Центре уведомлений?</string>
+    <string name="onboarding_c3">Скорее всего, ваш производитель устройства реализовал белый список для этих функций.</string>
+    <string name="onboarding_c3_a">Зачастую в этом списке есть много китайских стриминговых сервисов и (иногда) Spotify.</string>
+    <string name="onboarding_c4">И тут в дело вступает MusicBridge!</string>
+    <string name="onboarding_c4_a">Работая как прокси между вашим любимым приложением и ОС, MusicBridge позволяет вам полностью наслаждаться музыкой.</string>
+    <string name="panel_apps">Приложения</string>
+    <string name="panel_settings">Настройки</string>
+    <string name="panel_todo">В разработке</string>
+</resources>

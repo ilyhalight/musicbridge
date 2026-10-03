@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">MusicBridge</string>
+    <string name="about_current_version">Version %1$s</string>
+    <string name="about_current_author">Author: Toil</string>
+    <string name="about_current_github" translatable="false">GitHub</string>
+    <string name="about_original_title" translatable="false">OmniBridge</string>
+    <string name="about_original_subtitle">Original app</string>
+    <string name="about_original_author">by iTaysonLab</string>
+    <string name="about_original_studio">a bruhcollective. project</string>
+    <string name="control_service_started">Service is running!</string>
+    <string name="control_service_stopped">Service is stopped!</string>
+    <string name="control_service_stopped_desc">Tap to start</string>
+    <string name="onboarding">Welcome to MusicBridge!</string>
+    <string name="onboarding_act">Get Started</string>
+    <string name="onboarding_act_disclaimer">MusicBridge assumes you have a compatible OEM on a stock ROM - such as Oppo, vivo or OnePlus.\n\nIt does not make sense to run this on a Pixel or other pure Android ROMs.</string>
+    <string name="onboarding_act_full">Grant permissions</string>
+    <string name="onboarding_act_full_a1">Notification Listener</string>
+    <string name="onboarding_act_full_a1_d">Required for Android to provide media session data</string>
+    <string name="onboarding_act_full_a3">Unrestricted Background</string>
+    <string name="onboarding_act_full_a3_d">To keep MusicBridge running for longer</string>
+    <string name="onboarding_act_full_a3_e">Optional</string>
+    <string name="onboarding_act_full_act">Continue</string>
+    <string name="onboarding_act_full_hint">MusicBridge does not have \"Internet\" permission, so your data will never be collected and shared with anyone.</string>
+    <string name="onboarding_c1">Ever stumbled across system not wanting to control your music player?</string>
+    <string name="onboarding_c2">Not showing in your \"Dynamic Island\"? Not showing a fancy widget in Quick Settings?</string>
+    <string name="onboarding_c3">That is probably because your device manufacturer implemented a whitelist for these features.</string>
+    <string name="onboarding_c3_a">That in most cases include a lot of Chinese streaming services and (sometimes) Spotify.</string>
+    <string name="onboarding_c4">And that is where MusicBridge steps in!</string>
+    <string name="onboarding_c4_a">Acting as a proxy between your favorite application and the OS, MusicBridge allows you to break the chains and enjoy your music fully.</string>
+    <string name="panel_apps">Apps</string>
+    <string name="panel_settings">Settings</string>
+    <string name="panel_todo">Work in Progress</string>
+
+    <!-- Shown only on devices with a Russian locale, so intentionally not translated. -->
+    <string name="ru_vkx_ad" translatable="false">При поддержке</string>
+    <string name="ru_vkx_ad_1" translatable="false">VK X</string>
+    <string name="ru_vkx_ad_2" translatable="false">Пожалуй, лучший музыкальный плеер для VK с огромным функционалом и продвинутой кастомизацией.</string>
+</resources>
