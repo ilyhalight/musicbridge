@@ -64,7 +64,7 @@ class MusicBridgeService : Service() {
                 var wasTracking = false
                 var previousAccount: String? = null
                 app.settings.scrobbling.distinctUntilChangedBy {
-                    listOf(it.canTrack, it.accountId, it.thresholdMode, it.thresholdSeconds)
+                    listOf(it.canTrack, it.accountId, it.thresholdMode, it.thresholdSeconds, it.splitArtists)
                 }.collect { settings ->
                     tracker.configure(settings)
                     if (settings.canTrack && (!wasTracking || settings.accountId != previousAccount)) tracker.update(mirror.currentPlayback())

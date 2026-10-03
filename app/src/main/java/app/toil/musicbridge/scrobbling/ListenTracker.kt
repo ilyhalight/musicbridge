@@ -95,7 +95,11 @@ class ListenTracker(
     private fun maybeSubmit() {
         val listen = current ?: return
         if (!settings.canTrack || listen.submitted || listen.listenedMs < settings.thresholdMs(listen.track.durationMs)) return
-        val payload = ScrobbleListen(listen.id, checkNotNull(settings.accountId), listen.packageName, listen.track, checkNotNull(listen.startedAt), listen.listenedMs)
+        val payload = ScrobbleListen(
+            listen.id, checkNotNull(settings.accountId), listen.packageName, listen.track,
+            checkNotNull(listen.startedAt), listen.listenedMs,
+            splitArtists = settings.splitArtists && malojaNativeEndpoint(settings.endpoint) != null,
+        )
         listen.submitted = runCatching { submit(payload) }.getOrDefault(false)
     }
 }

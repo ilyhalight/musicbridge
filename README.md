@@ -49,8 +49,15 @@ and connect your account. Connecting enables scrobbling; it is off by default.
 
 For **Maloja**, set **API server URL** to `https://your-server/apis/listenbrainz`
 (include any reverse-proxy path prefix) and enter a Maloja **API key** instead of a ListenBrainz user token.
-MusicBridge uses Maloja's ListenBrainz-compatible API, not `/apis/mlj_1`. The `/1` suffix is added automatically;
+Connect using Maloja's ListenBrainz-compatible URL, not `/apis/mlj_1`. The `/1` suffix is added automatically;
 URLs that already end in `/1` also work. Other ListenBrainz-compatible servers can be used the same way.
+
+If your player shows artists as `Artist 1, Artist 2`, enable **Split artists at commas** after connecting Maloja.
+New listens are then sent to the same server's native `/apis/mlj_1/newscrobble` endpoint with an explicit artist array;
+the API key is added only when sending, never stored in the queue. The host, port and reverse-proxy prefix stay the same.
+This option is off by default and available for `/apis/listenbrainz` (or `/apis/lbrnz`) connections only.
+It does not change queued or previously submitted listens. Turn it off when a comma belongs to one artist's name,
+such as `Earth, Wind & Fire`. Native submissions skip Maloja's metadata cleanup to preserve the explicit artist names.
 
 HTTPS is the default. For an HTTP-only server, explicitly enable **Allow unencrypted HTTP** before connecting:
 the key and listening data will be sent without encryption. Redirects are not followed; enter the final API URL.

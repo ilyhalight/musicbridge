@@ -71,6 +71,9 @@
     <string name="scrobbling_threshold_saved">Threshold saved.</string>
     <string name="scrobbling_threshold_hint">Pauses, buffering and seeks do not count as listening time. With no track duration, the half-track mode uses 4 minutes.</string>
     <string name="scrobbling_delivery">Delivery</string>
+    <string name="scrobbling_split_artists">Split artists at commas</string>
+    <string name="scrobbling_split_artists_hint">For a Maloja server: “Artist 1, Artist 2” is sent as two artists using the native API. Applies only to new listens; the existing queue is unchanged.</string>
+    <string name="scrobbling_split_artists_warning">Keep this off if a comma is part of a single artist’s name, such as “Earth, Wind &amp; Fire”.</string>
     <string name="scrobbling_pending">Queued listens: %1$d</string>
     <string name="scrobbling_failed">Rejected listens: %1$d</string>
     <string name="scrobbling_last_sent">Last sent: %1$s</string>

@@ -3,6 +3,7 @@ package app.toil.musicbridge.scrobbling
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ScrobblingEndpointTest {
@@ -47,5 +48,12 @@ class ScrobblingEndpointTest {
         assertFalse(sameScrobblingAccount(DEFAULT_SCROBBLING_ENDPOINT, "Listener", "https://music.example/apis/listenbrainz/1", "Listener"))
         assertFalse(sameScrobblingAccount(DEFAULT_SCROBBLING_ENDPOINT, "Old", DEFAULT_SCROBBLING_ENDPOINT, "New"))
         assertFalse(sameScrobblingAccount(DEFAULT_SCROBBLING_ENDPOINT, null, DEFAULT_SCROBBLING_ENDPOINT, "Listener"))
+    }
+
+    @Test fun malojaNativePathKeepsHostPortAndProxyPrefix() {
+        assertEquals("http://192.168.1.2:42010/maloja/apis/mlj_1", malojaNativeEndpoint("http://192.168.1.2:42010/maloja/apis/listenbrainz/1"))
+        assertEquals("https://music.example/apis/mlj_1", malojaNativeEndpoint("https://music.example/apis/lbrnz/1"))
+        assertNull(malojaNativeEndpoint(DEFAULT_SCROBBLING_ENDPOINT))
+        assertNull(malojaNativeEndpoint("https://music.example/other/1"))
     }
 }

@@ -22,36 +22,40 @@ class ListenBrainzHttpTransport(
 
     override fun request(path: String, token: String, body: String?): ApiResponse {
         require(path == "validate-token" || path == "submit-listens")
-        require(token.isNotBlank() && token.length <= 256 && token.all { it.code in 33..126 })
-        val connection = URL("$endpoint/$path").openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 15_000
-            connection.instanceFollowRedirects = false
-            connection.requestMethod = if (body == null) "GET" else "POST"
-            connection.setRequestProperty("Authorization", "Token $token")
-            connection.setRequestProperty("User-Agent", "MusicBridge/1.0 (https://github.com/ilyhalight/)")
-            if (body != null) {
-                connection.doOutput = true
-                connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
-            }
-            val code = connection.responseCode
-            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-            val response = stream?.bufferedReader(Charsets.UTF_8)?.use { reader ->
-                val buffer = CharArray(1024)
-                val text = StringBuilder()
-                while (text.length < 16_384) {
-                    val count = reader.read(buffer, 0, minOf(buffer.size, 16_384 - text.length))
-                    if (count < 0) break
-                    text.append(buffer, 0, count)
-                }
-                text.toString()
-            }.orEmpty()
-            return ApiResponse(code, response, connection.getHeaderField("Retry-After") ?: connection.getHeaderField("X-RateLimit-Reset-In"))
-        } finally {
-            connection.disconnect()
+        return scrobblingHttpRequest("$endpoint/$path", token, body)
+    }
+}
+
+internal fun scrobblingHttpRequest(url: String, token: String?, body: String?): ApiResponse {
+    if (token != null) require(token.isNotBlank() && token.length <= 256 && token.all { it.code in 33..126 })
+    val connection = URL(url).openConnection() as HttpURLConnection
+    try {
+        connection.connectTimeout = 15_000
+        connection.readTimeout = 15_000
+        connection.instanceFollowRedirects = false
+        connection.requestMethod = if (body == null) "GET" else "POST"
+        if (token != null) connection.setRequestProperty("Authorization", "Token $token")
+        connection.setRequestProperty("User-Agent", "MusicBridge/1.0 (https://github.com/ilyhalight/)")
+        if (body != null) {
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
         }
+        val code = connection.responseCode
+        val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+        val response = stream?.bufferedReader(Charsets.UTF_8)?.use { reader ->
+            val buffer = CharArray(1024)
+            val text = StringBuilder()
+            while (text.length < 16_384) {
+                val count = reader.read(buffer, 0, minOf(buffer.size, 16_384 - text.length))
+                if (count < 0) break
+                text.append(buffer, 0, count)
+            }
+            text.toString()
+        }.orEmpty()
+        return ApiResponse(code, response, connection.getHeaderField("Retry-After") ?: connection.getHeaderField("X-RateLimit-Reset-In"))
+    } finally {
+        connection.disconnect()
     }
 }
 

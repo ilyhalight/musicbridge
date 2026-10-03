@@ -38,7 +38,7 @@ NEVER add commit hash to changelog message
 | Build        | Gradle 8.13 wrapper, Android Gradle Plugin 8.13.0, version catalog, JDK 17                                              |
 | Release      | R8 minification and resource shrinking; optional `keystore.properties`, debug-key fallback                              |
 | Tests        | JUnit 4.13.2 (session selection, listening tracker, ListenBrainz payloads and response policy)                          |
-| Scrobbling   | ListenBrainz-compatible servers (including Maloja), HTTPS by default / explicit HTTP opt-in, Keystore encryption, WorkManager 2.10.1 |
+| Scrobbling   | ListenBrainz-compatible servers, optional native Maloja artist arrays, HTTPS by default / explicit HTTP opt-in, Keystore encryption, WorkManager 2.10.1 |
 | Permissions  | `INTERNET`, `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
 
 ### Project structure
@@ -58,7 +58,7 @@ app/src/main/java/app/toil/musicbridge/
 │       ├── MirrorSessionData.kt       snapshot copied into the mirror session
 │       ├── PlaybackObserver.kt        synchronous selected-player snapshots for scrobbling
 │       └── MirrorEvent.kt             active player, metadata and playback state UI events
-├── scrobbling/                        ListenTracker, ListenBrainzClient, ScrobblingEndpoint, ScrobbleQueue and ScrobbleWorker
+├── scrobbling/                        ListenTracker, ListenBrainzClient, MalojaClient, ScrobblingEndpoint, ScrobbleQueue and ScrobbleWorker
 ├── data/SettingsRepository.kt         onboarding and scrobbling preferences, encrypted credentials
 ├── data/TokenCipher.kt                Android Keystore AES-GCM token encryption
 ├── ui/

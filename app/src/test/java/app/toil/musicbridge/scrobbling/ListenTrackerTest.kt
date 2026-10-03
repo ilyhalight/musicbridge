@@ -305,4 +305,30 @@ class ListenTrackerTest {
         tracker.tick()
         assertEquals(2, attempts)
     }
+
+    @Test fun malojaSplittingIsAttachedWhenListenQualifies() {
+        tracker.configure(settings.copy(endpoint = "https://music.example/apis/listenbrainz/1", splitArtists = true))
+        tracker.update(sample(track = track.copy(artist = "Artist 1, Artist 2")))
+        wait(30)
+        assertTrue(sent.single().splitArtists)
+        assertEquals("Artist 1, Artist 2", sent.single().track.artist)
+    }
+
+    @Test fun enablingSplittingDoesNotResubmitCurrentListen() {
+        val maloja = settings.copy(endpoint = "https://music.example/apis/listenbrainz/1")
+        tracker.configure(maloja)
+        tracker.update(sample())
+        wait(30)
+        tracker.configure(maloja.copy(splitArtists = true))
+        wait(30)
+        assertEquals(1, sent.size)
+        assertTrue(!sent.single().splitArtists)
+    }
+
+    @Test fun splittingIsNotAppliedToOtherServers() {
+        tracker.configure(settings.copy(splitArtists = true))
+        tracker.update(sample())
+        wait(30)
+        assertTrue(!sent.single().splitArtists)
+    }
 }

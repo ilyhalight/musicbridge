@@ -18,7 +18,8 @@ class ScrobbleQueue(context: Context) {
         val work = OneTimeWorkRequestBuilder<ScrobbleWorker>()
             .setInputData(workDataOf(
                 ScrobbleWorker.ACCOUNT_ID to listen.accountId,
-                ScrobbleWorker.PAYLOAD to ListenBrainzClient.payload(listen),
+                ScrobbleWorker.PAYLOAD to if (listen.splitArtists) MalojaClient.payload(listen) else ListenBrainzClient.payload(listen),
+                ScrobbleWorker.MALOJA_NATIVE to listen.splitArtists,
                 ScrobbleWorker.TRACK_TITLE to listen.track.title.take(256),
             ))
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())

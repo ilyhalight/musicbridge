@@ -68,6 +68,9 @@
     <string name="scrobbling_threshold_saved">Порог сохранён.</string>
     <string name="scrobbling_threshold_hint">Паузы, буферизация и перемотки не засчитываются. Если длительность неизвестна, режим половины трека использует 4 минуты.</string>
     <string name="scrobbling_delivery">Отправка</string>
+    <string name="scrobbling_split_artists">Разделять исполнителей по запятой</string>
+    <string name="scrobbling_split_artists_hint">Для сервера Maloja: «Автор 1, Автор 2» отправляется как два исполнителя через нативный API. Только для новых прослушиваний; текущая очередь не меняется.</string>
+    <string name="scrobbling_split_artists_warning">Оставьте выключенным, если запятая входит в имя одного исполнителя, например «Earth, Wind &amp; Fire».</string>
     <string name="scrobbling_pending">Прослушиваний в очереди: %1$d</string>
     <string name="scrobbling_failed">Отклонённых прослушиваний: %1$d</string>
     <string name="scrobbling_last_sent">Последний отправленный трек: %1$s</string>

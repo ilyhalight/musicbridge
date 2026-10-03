@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.toil.musicbridge.MusicBridgeApplication
 import java.io.IOException
+import org.json.JSONException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -25,8 +26,11 @@ class ScrobbleWorker(context: Context, parameters: WorkerParameters) : Coroutine
         }
         if (credentials.accountId != accountId) return@withContext Result.success()
         try {
-            val client = ListenBrainzClient(ListenBrainzHttpTransport(credentials.endpoint, credentials.allowHttp))
-            val response = client.submit(credentials.token, payload)
+            val response = if (inputData.getBoolean(MALOJA_NATIVE, false)) {
+                MalojaClient(credentials.endpoint, credentials.allowHttp).submit(credentials.token, payload)
+            } else {
+                ListenBrainzClient(ListenBrainzHttpTransport(credentials.endpoint, credentials.allowHttp)).submit(credentials.token, payload)
+            }
             when (submissionDecision(response.code)) {
                 SubmissionDecision.Accepted -> {
                     repository.markSubmitted(accountId, inputData.getString(TRACK_TITLE).orEmpty())
@@ -49,6 +53,8 @@ class ScrobbleWorker(context: Context, parameters: WorkerParameters) : Coroutine
             Result.retry()
         } catch (_: IllegalArgumentException) {
             Result.failure()
+        } catch (_: JSONException) {
+            Result.failure()
         }
     }
 
@@ -56,5 +62,6 @@ class ScrobbleWorker(context: Context, parameters: WorkerParameters) : Coroutine
         const val ACCOUNT_ID = "account_id"
         const val PAYLOAD = "payload"
         const val TRACK_TITLE = "track_title"
+        const val MALOJA_NATIVE = "maloja_native"
     }
 }

@@ -14,6 +14,7 @@ import app.toil.musicbridge.scrobbling.ThresholdMode
 import app.toil.musicbridge.scrobbling.DEFAULT_SCROBBLING_ENDPOINT
 import app.toil.musicbridge.scrobbling.normalizeScrobblingEndpoint
 import app.toil.musicbridge.scrobbling.sameScrobblingAccount
+import app.toil.musicbridge.scrobbling.malojaNativeEndpoint
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -40,6 +41,7 @@ class SettingsRepository(context: Context) {
             lastSubmittedTitle = values[LastSubmittedKey],
             endpoint = values[EndpointKey] ?: DEFAULT_SCROBBLING_ENDPOINT,
             allowHttp = values[AllowHttpKey] ?: false,
+            splitArtists = values[SplitArtistsKey] ?: false,
         )
     }
 
@@ -60,6 +62,7 @@ class SettingsRepository(context: Context) {
             if (!sameScrobblingAccount(it[EndpointKey] ?: DEFAULT_SCROBBLING_ENDPOINT, it[UserNameKey], normalizedEndpoint, userName) || it[AccountIdKey] == null) {
                 it[AccountIdKey] = UUID.randomUUID().toString()
                 it.remove(LastSubmittedKey)
+                it[SplitArtistsKey] = false
             }
             it[TokenKey] = encrypted
             it[UserNameKey] = userName
@@ -84,6 +87,12 @@ class SettingsRepository(context: Context) {
 
     suspend fun setScrobblingEnabled(enabled: Boolean) {
         dataStore.edit { it[ScrobblingEnabledKey] = enabled && it[AccountIdKey] != null }
+    }
+
+    suspend fun setSplitArtists(enabled: Boolean) {
+        dataStore.edit {
+            it[SplitArtistsKey] = enabled && malojaNativeEndpoint(it[EndpointKey] ?: DEFAULT_SCROBBLING_ENDPOINT) != null
+        }
     }
 
     suspend fun setThreshold(mode: ThresholdMode, seconds: Int) {
@@ -125,5 +134,6 @@ class SettingsRepository(context: Context) {
         val LastSubmittedKey = stringPreferencesKey("listenbrainz_last_submitted")
         val EndpointKey = stringPreferencesKey("scrobbling_endpoint")
         val AllowHttpKey = booleanPreferencesKey("scrobbling_allow_http")
+        val SplitArtistsKey = booleanPreferencesKey("scrobbling_split_artists")
     }
 }

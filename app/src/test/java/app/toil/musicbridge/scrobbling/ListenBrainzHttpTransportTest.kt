@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ListenBrainzHttpTransportTest {
@@ -45,6 +47,31 @@ class ListenBrainzHttpTransportTest {
 
     @Test fun unapprovedHttpCannotCreateTransport() {
         assertTrue(runCatching { ListenBrainzHttpTransport("http://127.0.0.1:42010/apis/listenbrainz") }.isFailure)
+    }
+
+    @Test fun nativeMalojaReceivesAnArtistArrayAndKeyOnlyInPostBody() {
+        TestServer(1) { request ->
+            assertEquals("POST", request.method)
+            assertEquals("/maloja/apis/mlj_1/newscrobble", request.path)
+            assertNull(request.headers["authorization"])
+            val json = JSONObject(request.body)
+            assertEquals("test-key", json.getString("key"))
+            assertEquals(2, json.getJSONArray("artists").length())
+            assertEquals("Artist 1", json.getJSONArray("artists").getString(0))
+            assertEquals("Artist 2", json.getJSONArray("artists").getString(1))
+            assertTrue(json.getBoolean("nofix"))
+            assertFalse(json.has("listen_type"))
+            Reply(body = "{\"status\":\"success\"}")
+        }.use { server ->
+            val client = MalojaClient("${server.url}/maloja/apis/listenbrainz/1", true)
+            val listen = ScrobbleListen("id", "account", "player", ScrobbleTrack("Track", "Artist 1, Artist 2"), 1_790_000_000, 30_000, true)
+            assertEquals(200, client.submit("test-key", MalojaClient.payload(listen)).code)
+            server.await()
+        }
+    }
+
+    @Test fun nativeMalojaAlsoRequiresExplicitHttpPermission() {
+        assertTrue(runCatching { MalojaClient("http://127.0.0.1:42010/apis/listenbrainz/1") }.isFailure)
     }
 
     private data class Request(val method: String, val path: String, val headers: Map<String, String>, val body: String)

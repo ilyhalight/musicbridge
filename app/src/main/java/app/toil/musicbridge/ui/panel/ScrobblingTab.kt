@@ -50,6 +50,7 @@ import app.toil.musicbridge.scrobbling.ListenBrainzClient
 import app.toil.musicbridge.scrobbling.ListenBrainzHttpTransport
 import app.toil.musicbridge.scrobbling.DEFAULT_SCROBBLING_ENDPOINT
 import app.toil.musicbridge.scrobbling.normalizeScrobblingEndpoint
+import app.toil.musicbridge.scrobbling.malojaNativeEndpoint
 import app.toil.musicbridge.scrobbling.ScrobbleQueue
 import app.toil.musicbridge.scrobbling.ScrobblingSettings
 import app.toil.musicbridge.scrobbling.ThresholdMode
@@ -246,6 +247,21 @@ fun ScrobblingTab(contentPadding: PaddingValues) {
                 }) { Text(stringResource(R.string.scrobbling_save_threshold)) }
                 if (thresholdSaved) StatusText(R.string.scrobbling_threshold_saved)
                 Text(stringResource(R.string.scrobbling_threshold_hint), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        item(key = "artists") {
+            ScrobblingCard {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(stringResource(R.string.scrobbling_split_artists), modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = settings.splitArtists,
+                        enabled = settings.accountId != null && malojaNativeEndpoint(settings.endpoint) != null && !busy,
+                        onCheckedChange = { enabled -> scope.launch { app.settings.setSplitArtists(enabled) } },
+                        modifier = Modifier.semantics { contentDescription = context.getString(R.string.scrobbling_split_artists) },
+                    )
+                }
+                Text(stringResource(R.string.scrobbling_split_artists_hint), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.scrobbling_split_artists_warning), style = MaterialTheme.typography.bodySmall)
             }
         }
         item(key = "queue") {

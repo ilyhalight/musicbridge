@@ -23,3 +23,8 @@ fun normalizeScrobblingEndpoint(value: String, allowHttp: Boolean = false): Stri
 
 fun sameScrobblingAccount(oldEndpoint: String, oldUserName: String?, endpoint: String, userName: String): Boolean =
     oldEndpoint == endpoint && oldUserName == userName
+
+fun malojaNativeEndpoint(endpoint: String): String? {
+    val suffix = listOf("/apis/listenbrainz/1", "/apis/lbrnz/1").firstOrNull(endpoint::endsWith) ?: return null
+    return endpoint.removeSuffix(suffix) + "/apis/mlj_1"
+}

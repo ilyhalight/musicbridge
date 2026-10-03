@@ -13,6 +13,7 @@ data class ScrobblingSettings(
     val lastSubmittedTitle: String? = null,
     val endpoint: String = DEFAULT_SCROBBLING_ENDPOINT,
     val allowHttp: Boolean = false,
+    val splitArtists: Boolean = false,
 ) {
     val canTrack: Boolean get() = enabled && accountId != null && !authFailed
 
@@ -54,4 +55,5 @@ data class ScrobbleListen(
     val track: ScrobbleTrack,
     val listenedAt: Long,
     val listenedMs: Long,
+    val splitArtists: Boolean = false,
 )
