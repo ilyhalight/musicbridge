@@ -107,7 +107,7 @@ Each flavor is the same app under a different application ID. Install the one wh
 | `asLuna`    | `com.luna.music`         | Luna Music          |
 | `asHiby`    | `com.hiby.music`         | Hiby Music          |
 
-All flavors share `versionName` `1.0.1` and the code namespace `app.toil.musicbridge`. Android allows one app per
+All flavors share `versionName` `1.0.2` and the code namespace `app.toil.musicbridge`. Android allows one app per
 package name, so a flavor cannot be installed next to the real app it uses the ID of.
 
 ## Install and set up

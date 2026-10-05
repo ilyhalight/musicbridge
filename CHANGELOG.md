@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Fixed tracks played with the screen off not being scrobbled: long gaps without updates are now credited as far as the player's reported position confirms them
+- Fixed the same track being scrobbled twice in a row from the same player, which happened when the player kept the previous track's metadata until the screen turned on. Repeat-one is now counted once
+- Fixed tracks whose metadata arrives late losing the time they had already played
+
 ## 1.0.1
 
 - Added optional ListenBrainz scrobbling for the mirrored player. Only the currently mirrored player is tracked
