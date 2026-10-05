@@ -46,6 +46,8 @@ data class PlaybackSample(
     val state: ListeningState,
     val positionMs: Long? = null,
     val queueItemId: Long? = null,
+    val positionUpdatedAtMs: Long? = null,
+    val playbackSpeed: Float = 1f,
 )
 
 data class ScrobbleListen(

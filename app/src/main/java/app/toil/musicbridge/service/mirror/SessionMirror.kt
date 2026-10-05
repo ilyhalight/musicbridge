@@ -184,6 +184,8 @@ class SessionMirror(
             session.sourceId, session.packageName, track, listeningState,
             state?.position?.takeIf { it >= 0 },
             state?.activeQueueItemId?.takeIf { it != MediaSession.QueueItem.UNKNOWN_ID.toLong() },
+            state?.lastPositionUpdateTime?.takeIf { it > 0 },
+            state?.playbackSpeed ?: 1f,
         )
     }
 
